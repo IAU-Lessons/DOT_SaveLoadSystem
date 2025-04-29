@@ -1,0 +1,14 @@
+using UnityEngine;
+
+public class UIController : MonoBehaviour
+{
+    public void StopGame()
+    {
+        Time.timeScale = 0;
+    }
+
+    public void ResumeGAme()
+    {
+        Time.timeScale = 1;
+    }
+}
