@@ -11,4 +11,14 @@ public class UIController : MonoBehaviour
     {
         Time.timeScale = 1;
     }
+
+    public void CheckPointSave()
+    {
+        SaveSystem.SaveGame();
+    }
+
+    public void CheckPointLoad()
+    {
+        SaveSystem.LoadGame();
+    }
 }

@@ -26,7 +26,7 @@ public class SaveSystem : MonoBehaviour
         }
         else
         {
-            return Application.persistentDataPath + "/save.dat";
+            return Application.persistentDataPath + "/checkpoint.dat";
         }
     }
     
@@ -49,16 +49,16 @@ public class SaveSystem : MonoBehaviour
         string json = JsonConvert.SerializeObject(wrapper, Formatting.Indented, settings);
         byte[] binaryData = System.Text.Encoding.UTF8.GetBytes(json);
         string filePath = GetFilePath(slot, saveName);
-        UnityEngine.Windows.File.WriteAllBytes(filePath, binaryData);
+        System.IO.File.WriteAllBytes(filePath, binaryData);
     }    
     
     public static void LoadGame(int? slot = null, string saveName = null)
     {
         string filePath = GetFilePath(slot, saveName);
 
-        if (!UnityEngine.Windows.File.Exists(filePath)) return;
+        if (!System.IO.File.Exists(filePath)) return;
 
-        byte[] binData = UnityEngine.Windows.File.ReadAllBytes(filePath);
+        byte[] binData = System.IO.File.ReadAllBytes(filePath);
         string json = Encoding.UTF8.GetString(binData);
 
         var settings = new JsonSerializerSettings
@@ -90,7 +90,7 @@ public class SaveSystem : MonoBehaviour
     public static List<string> ListAllSaveFiles(bool fullPath = false)
     {
         string directoryPath = Application.persistentDataPath;
-        if (!UnityEngine.Windows.Directory.Exists(directoryPath))
+        if (!System.IO.Directory.Exists(directoryPath))
         {
             Debug.Log("Kayıt klasörü bulunamadı!");
             return new List<string>();
@@ -126,7 +126,7 @@ public class SaveSystem : MonoBehaviour
     [System.Serializable]
     private class SerializationWrapper
     {
-
+        
         public List<SaveEntry> jsonData = new List<SaveEntry>();
 
         public SerializationWrapper()
