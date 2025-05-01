@@ -13,7 +13,7 @@ This  save system works as slot based, checkpoint based and file based. Also use
 
 ## Some Planned Improvements
 
-* [ ] Save scene id
+* [x] Save scene id
 * [ ] Cryptology
 * [ ] Async saving and loading for progress
 * [ ] Meta-File specs

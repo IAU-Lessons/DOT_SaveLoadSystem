@@ -55,7 +55,6 @@ public class SaveSystem : MonoBehaviour
     public static void LoadGame(int? slot = null, string saveName = null)
     {
         string filePath = GetFilePath(slot, saveName);
-
         if (!System.IO.File.Exists(filePath)) return;
 
         byte[] binData = System.IO.File.ReadAllBytes(filePath);
@@ -73,6 +72,19 @@ public class SaveSystem : MonoBehaviour
             Debug.LogError("Kayıtlı data yüklenemedi. Veri bozuk olabilir..");
             return;
         }
+        
+        string currentScene = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+
+        if (wrapper.sceneName != currentScene)
+        {
+            //Change Scene!
+            GameObject loaderObject = new GameObject("DeferredLoader");
+            DeferredLoader loader = loaderObject.AddComponent<DeferredLoader>();
+            loader.DefferedLoad(slot, saveName, wrapper.sceneName);
+            return;
+        }
+        
+        //Sahne aynı ise alt kısım çalışır!
         var saveables = GameObject.FindObjectsOfType<MonoBehaviour>().OfType<ISaveable>();
 
         foreach (var saveable in saveables)
@@ -126,7 +138,8 @@ public class SaveSystem : MonoBehaviour
     [System.Serializable]
     private class SerializationWrapper
     {
-        
+        public string sceneName;
+        public int sceneIndex;
         public List<SaveEntry> jsonData = new List<SaveEntry>();
 
         public SerializationWrapper()
@@ -135,6 +148,8 @@ public class SaveSystem : MonoBehaviour
         
         public SerializationWrapper(Dictionary<string, object> dictionary)
         {
+            sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            sceneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
             foreach (var pair in dictionary)
             {
                 SaveEntry entry = new SaveEntry
