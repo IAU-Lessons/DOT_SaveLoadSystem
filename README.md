@@ -16,4 +16,4 @@ This  save system works as slot based, checkpoint based and file based. Also use
 * [x] Save scene id
 * [ ] Cryptology
 * [ ] Async saving and loading for progress
-* [ ] Meta-File specs
+* [x] Meta-File specs
