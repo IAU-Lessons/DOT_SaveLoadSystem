@@ -179,7 +179,7 @@ public class SaveSystem : MonoBehaviour
         }
     }
     
-    internal static class SaveMetaDataManager
+    public static class SaveMetaDataManager
     {
         public static string GetMetadataPath(string saveName)
         {

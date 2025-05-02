@@ -41,10 +41,10 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKey(KeyCode.P))
         {
-            List<string> l = SaveSystem.ListAllSaveFiles();
-            foreach (var v in l)
+            List<MetaData> l = SaveSystem.SaveMetaDataManager.ListAllSaveMetaDatas();
+            foreach (MetaData v in l)
             {
-                Debug.Log(v);
+                Debug.Log(v.saveName);
             }
         }
     }

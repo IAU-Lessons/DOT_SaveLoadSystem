@@ -27,17 +27,17 @@ public class SaveLoadFileUIController : MonoBehaviour
 
     private void GetLoadFiles()
     {
-        List<string> files = SaveSystem.ListAllSaveFiles(false);
+        List<MetaData> files = SaveSystem.SaveMetaDataManager.ListAllSaveMetaDatas();
         if(files == null) return;
         if(files.Count == 0) return;
         
-        foreach (var loadedFile in files)
+        foreach (MetaData loadedFile in files)
         {
             GameObject loadBtn = Instantiate(loadBtnPrefab);
-            loadBtn.GetComponentInChildren<TextMeshProUGUI>().text = Path.GetFileNameWithoutExtension(loadedFile);
+            loadBtn.GetComponentInChildren<TextMeshProUGUI>().text = loadedFile.saveName;
             loadBtn.GetComponent<Button>().onClick.AddListener(() =>
             {
-                SaveSystem.LoadGame(null, loadedFile);
+                SaveSystem.LoadGame(null, loadedFile.saveName);
             });
             loadBtn.transform.parent = content;
         }
