@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
 using Newtonsoft.Json; //   -> com.unity.nuget.newtonsoft-json
 using System.IO;
+using UnityEngine.SceneManagement;
 
 [System.Serializable]
 public class SaveEntry
@@ -29,6 +31,16 @@ public class SaveSystem : MonoBehaviour
             return Application.persistentDataPath + "/checkpoint.dat";
         }
     }
+
+    private static string GetMetaKey(int? slot = null, string saveName = null)
+    {
+        if (!string.IsNullOrEmpty(saveName))
+            return saveName;
+        else if (slot.HasValue)
+            return $"save_slot{slot.Value}";
+        else
+            return "checkpoint";
+    }
     
     public static void SaveGame(int? slot = null, string saveName = null)
     {
@@ -50,6 +62,10 @@ public class SaveSystem : MonoBehaviour
         byte[] binaryData = System.Text.Encoding.UTF8.GetBytes(json);
         string filePath = GetFilePath(slot, saveName);
         System.IO.File.WriteAllBytes(filePath, binaryData);
+        
+        string sceneName = SceneManager.GetActiveScene().name;
+        string metaName = GetMetaKey(slot, saveName);
+        SaveMetaDataManager.WriteMetaData(metaName,sceneName, 0);
     }    
     
     public static void LoadGame(int? slot = null, string saveName = null)
@@ -98,7 +114,8 @@ public class SaveSystem : MonoBehaviour
             }
         }
     }
-
+    
+    [Obsolete("ListAllSaveFiles() artık kullanılmıyor, yerine ListAllSaveMetadatas() fonksiyonunu kullan.")]
     public static List<string> ListAllSaveFiles(bool fullPath = false)
     {
         string directoryPath = Application.persistentDataPath;
@@ -162,4 +179,86 @@ public class SaveSystem : MonoBehaviour
         }
     }
     
+    internal static class SaveMetaDataManager
+    {
+        public static string GetMetadataPath(string saveName)
+        {
+            return Path.Combine(Application.persistentDataPath, saveName + ".meta");
+        }
+
+        public static void WriteMetaData(string saveName, string sceneName, float playTime)
+        {
+            MetaData metaData = new MetaData(saveName, sceneName, playTime);
+            string json = JsonConvert.SerializeObject(metaData, Formatting.Indented);
+            File.WriteAllText(GetMetadataPath(saveName), json);
+        }
+
+        public static MetaData ReadMetaData(string saveName)
+        {
+            string path = GetMetadataPath(saveName);
+            if (!File.Exists(path)) return null;
+            string json = File.ReadAllText(path);
+            return JsonConvert.DeserializeObject<MetaData>(json);
+        }
+        
+        public static List<MetaData> ListAllSaveMetaDatas()
+        {
+            string d_path = Application.persistentDataPath;
+
+            if (!Directory.Exists(d_path))
+            {
+                Debug.Log("MetaData klasörü bulunamadı!");
+                return new List<MetaData>();
+            }
+
+            var metaFiles = Directory.GetFiles(d_path, "*.meta");
+
+            List<MetaData> metaDatas = new List<MetaData>();
+
+            foreach (string metaFilePath in metaFiles)
+            {
+                try
+                {
+                    string json = File.ReadAllText(metaFilePath);
+                    MetaData metaData = JsonConvert.DeserializeObject<MetaData>(json);
+                    if (metaData != null)
+                    {
+                        string datFilePath = Path.Combine(d_path, metaData.saveName + ".dat");
+                        if(!File.Exists(datFilePath)) continue; // meta dosyası var ancak dat dosyası yok o zaman listeye ekleme! TODO : Belki developer'a bilgi verilmeli!
+                        metaDatas.Add(metaData);                    
+                    }
+                }
+                catch (System.Exception ex)
+                {
+                    Console.WriteLine($"Meta dosyası okunamadı! {metaFilePath} -> {ex.Message}");
+                }
+            }
+
+            return metaDatas
+                .OrderByDescending(meta => meta.saveTimeRaw)
+                .ToList();
+        }
+    }
+}
+
+[System.Serializable]
+public class MetaData
+{
+    public string saveName;
+    public string sceneName;
+    [JsonIgnore] public DateTime saveTimeRaw;
+    public string saveTime;
+    public float playTimeInSeconds;
+
+    public MetaData(){}
+        
+    public MetaData(string saveName, string sceneName, float playTimeInSeconds)
+    {
+        this.saveName = saveName;
+        this.sceneName = sceneName;
+        this.playTimeInSeconds = playTimeInSeconds;
+        saveTimeRaw = System.DateTime.Now;
+        this.saveTime = saveTimeRaw.ToString("yyyy-MM-dd HH:mm:ss");
+    }
+        
 }
